@@ -1,5 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Timers;
 
 namespace TestMonitel
@@ -11,11 +15,13 @@ namespace TestMonitel
         private static string _writeStream1;
         private static string _writeStream2;
         private static Timer _timer;
+        private static string _fileName = @"./text.txt";
+        public static event EventHandler _eventHandler;
+
 
         static void Main(string[] args)
         {
             Dictionary = new Dictionary<int, string>();
-
             _n = 1;
 
             _writeStream1 = $"WS1 — {DateTime.Now}";
@@ -26,35 +32,13 @@ namespace TestMonitel
             _timer.Elapsed += Timer_Elapsed;
 
             _timer.Start();
-
+            _eventHandler += Program__eventHandler;
 
             Console.ReadKey();
-            //do
-            //{
+        }
 
-
-            //    if (n % 2 == 0)
-            //    {
-            //        dictionary.Add(n, $"WS2 — {DateTime.Now}");
-            //        //var writeStream2 = Task.Factory.StartNew(() =>
-            //        //{
-
-            //        //});
-            //    }
-            //    else
-            //    {
-            //        dictionary.Add(n, $"WS1 — {DateTime.Now}");
-            //        //var writeStream1 = Task.Factory.StartNew(() =>
-            //        //{
-
-            //        //});
-            //    }
-
-
-            //} while (n < 100);
-
-
-
+        private static void Program__eventHandler(object sender, EventArgs e)
+        {
 
 
         }
@@ -73,10 +57,52 @@ namespace TestMonitel
                 return;
             }
 
+            using (var fileStream = new FileStream(_fileName, FileMode.Append, FileAccess.Write))
+            {
+                using var streamWriter = new StreamWriter(fileStream);
 
-            Dictionary.Add(_n, _n % 2 == 0 ? _writeStream2 : _writeStream1);
+                streamWriter.WriteLine(_n % 2 == 0 ? _writeStream2 : _writeStream1);
+                streamWriter.Flush();
+                streamWriter.Close();
+            }
+
+
+            var file = File.OpenRead(_fileName);
+            var bytes = new byte[file.Length];
+            file.Read(bytes, 0, bytes.Length);
+            CheckItems(bytes);
+            file.Close();
+
             IncInt(ref _n);
 
+
+            //Dictionary.Add(_n,  ? _writeStream2 : _writeStream1);
+        }
+
+        private static void CheckItems(byte[] bytes)
+        {
+            Dictionary.Clear();
+
+            using var memory = new MemoryStream(bytes);
+            using (var streamReader = new StreamReader(memory))
+            {
+                var text = streamReader.ReadToEnd();
+                var items = text.Split('\n');//.ToDictionary(s => s[0], s =>s[1]);
+                for (int i = 0; i < items.Length - 2; i++)
+                {
+                    var item = items[i];
+                    Dictionary.Add(i, item);
+
+                }
+
+                if (Dictionary.Count % 5 == 0 && Dictionary.Count != 0)
+                {
+                   _eventHandler?.Invoke(items, EventArgs.Empty);
+                }
+
+                streamReader.Close();
+            }
+            memory.Close();
         }
     }
 }
