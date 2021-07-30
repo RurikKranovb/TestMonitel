@@ -39,8 +39,14 @@ namespace TestMonitel
 
         private static void Program__eventHandler(object sender, EventArgs e)
         {
+             Dictionary.TryGetValue(_n, out var itemFirst);
+             Dictionary.TryGetValue(_n - 1, out var itemSecond);
 
+             var key = _n += _n - 1;
 
+            Dictionary.Add(key, $"MS - {itemFirst} + {itemSecond}");
+
+          
         }
 
         private static void IncInt(ref int n)
@@ -56,7 +62,10 @@ namespace TestMonitel
                 _timer.Stop();
                 return;
             }
+            //Task.Factory.StartNew(() =>
+            //{
 
+            //})
             using (var fileStream = new FileStream(_fileName, FileMode.Append, FileAccess.Write))
             {
                 using var streamWriter = new StreamWriter(fileStream);
@@ -75,8 +84,6 @@ namespace TestMonitel
 
             IncInt(ref _n);
 
-
-            //Dictionary.Add(_n,  ? _writeStream2 : _writeStream1);
         }
 
         private static void CheckItems(byte[] bytes)
@@ -88,7 +95,7 @@ namespace TestMonitel
             {
                 var text = streamReader.ReadToEnd();
                 var items = text.Split('\n');//.ToDictionary(s => s[0], s =>s[1]);
-                for (int i = 0; i < items.Length - 2; i++)
+                for (var i = 0; i < items.Length - 2; i++)
                 {
                     var item = items[i];
                     Dictionary.Add(i, item);
