@@ -74,8 +74,9 @@ namespace TestMonitel
             }
 
 
-            IncInt(ref _n);
             Dictionary.Add(_n, _n % 2 == 0 ? _writeStream2 : _writeStream1);
+            IncInt(ref _n);
+
         }
     }
 }
