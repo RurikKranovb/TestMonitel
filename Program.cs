@@ -67,7 +67,7 @@ namespace TestMonitel
         private static void Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
 
-            if (!(_n >= 100))
+            if (_n >= 100)
             {
                 _timer.Stop();
                 return;
