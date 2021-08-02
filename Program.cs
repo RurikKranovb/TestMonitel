@@ -8,47 +8,48 @@ using System.Timers;
 
 namespace TestMonitel
 {
-    class Program
+    class Program : IDisposable
     {
         public static Dictionary<int, string> Dictionary;
         private static int _n;
-        private static string _writeStream1;
-        private static string _writeStream2;
         private static Timer _timer;
-        private static string _fileName = @"./text.txt";
-        public static event EventHandler _eventHandler;
+        private static int _keyStream1;
+        private static int _keyStream2;
 
 
         static void Main(string[] args)
         {
             Dictionary = new Dictionary<int, string>();
             _n = 1;
-
-            _writeStream1 = $"WS1 — {DateTime.Now}";
-            _writeStream2 = $"WS2 — {DateTime.Now}";
-
+            _keyStream1 = 0;
+            _keyStream2 = 0;
             _timer = new Timer() {Interval = 1000};
 
-            _timer.Elapsed += Timer_Elapsed;
+            _timer.Elapsed += _timer_Elapsed;
 
             _timer.Start();
-            _eventHandler += Program__eventHandler;
 
             Console.ReadKey();
         }
 
-        private static void Program__eventHandler(object sender, EventArgs e)
+        private static void _timer_Elapsed(object sender, ElapsedEventArgs e)
         {
-             Dictionary.TryGetValue(_n, out var itemFirst);
-             Dictionary.TryGetValue(_n - 1, out var itemSecond);
+            if (_n >= 100)
+            {
+                _timer.Stop();
 
-             var key =  _n += _n - 1;
+                foreach (var item in Dictionary)
+                {
+                    Console.WriteLine(item);
+                }
 
-             key += Dictionary.Count;
+                return;
+            }
 
-            Dictionary.Add(key, $"MS - {itemFirst} + {itemSecond}");
+            Task.Factory.StartNew(WriteStream1);
+            Task.Factory.StartNew(WriteStream2);
 
-
+            Task.Factory.StartNew(Read);
         }
 
         private static void IncInt(ref int n)
@@ -56,61 +57,64 @@ namespace TestMonitel
             n++;
         }
 
-        private static void Timer_Elapsed(object sender, ElapsedEventArgs e)
+        private static void WriteStream2()
         {
-
-            if (_n >= 100)
+            if (Dictionary.ContainsKey(_n))
             {
-                _timer.Stop();
-                return;
+                IncInt(ref _n);
             }
-            //Task.Factory.StartNew(() =>
-            //{
-
-            //})
-            using (var fileStream = new FileStream(_fileName, FileMode.Append, FileAccess.Write))
+            else
             {
-                using var streamWriter = new StreamWriter(fileStream);
+                if (_n % 2 == 0) return;
 
-                streamWriter.WriteLine(_n % 2 == 0 ? _writeStream2 : _writeStream1);
-                streamWriter.Flush();
-                streamWriter.Close();
+                Dictionary.Add(_n, $"WS2 — {DateTime.Now}");
+
+                //Task.Factory.StartNew(Read);
+
+                _keyStream2 = Dictionary.Count - 1;
+                IncInt(ref _n);
             }
-
-
-            var file = File.OpenRead(_fileName);
-            var bytes = new byte[file.Length];
-            file.Read(bytes, 0, bytes.Length);
-            CheckItems(bytes);
-            file.Close();
-
-            IncInt(ref _n);
-
         }
 
-        private static void CheckItems(byte[] bytes)
+        private static void WriteStream1()
         {
-            Dictionary.Clear();
+            if (_n % 2 != 0) return;
 
-            using var memory = new MemoryStream(bytes);
-            using (var streamReader = new StreamReader(memory))
+            if (Dictionary.ContainsKey(_n))
             {
-                var text = streamReader.ReadToEnd();
-                var items = text.Split('\n');//.ToDictionary(s => s[0], s =>s[1]);
-                for (var i = 0; i < items.Length - 2; i++)
-                {
-                    var item = items[i];
-                    Dictionary.Add(i, item);
-                }
-
-                if (Dictionary.Count % 5 == 0 && Dictionary.Count != 0)
-                {
-                   _eventHandler?.Invoke(items,EventArgs.Empty);
-                }
-
-                streamReader.Close();
+                IncInt(ref _n);
             }
-            memory.Close();
+            else
+            {
+                Dictionary.Add(_n, $"WS1 — {DateTime.Now}");
+
+                //Task.Factory.StartNew(Read);
+
+                _keyStream1 = Dictionary.Count - 1;
+                IncInt(ref _n);
+            }
+        }
+
+        private static async void Read()
+        {
+            if (Dictionary.Count % 5 == 0)
+            {
+                await Task.Run(MainStream);
+            }
+        }
+
+        private static void MainStream()
+        {
+            var key = _keyStream1 += _keyStream2;
+
+            key += Dictionary.Count;
+
+            Dictionary.Add(key, $"MS — {Dictionary.Count} + {key}");
+        }
+
+        public void Dispose()
+        {
+
         }
     }
 }
