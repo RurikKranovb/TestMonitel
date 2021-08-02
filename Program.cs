@@ -42,11 +42,13 @@ namespace TestMonitel
              Dictionary.TryGetValue(_n, out var itemFirst);
              Dictionary.TryGetValue(_n - 1, out var itemSecond);
 
-             var key = _n += _n - 1;
+             var key =  _n += _n - 1;
+
+             key += Dictionary.Count;
 
             Dictionary.Add(key, $"MS - {itemFirst} + {itemSecond}");
 
-          
+
         }
 
         private static void IncInt(ref int n)
@@ -99,12 +101,11 @@ namespace TestMonitel
                 {
                     var item = items[i];
                     Dictionary.Add(i, item);
-
                 }
 
                 if (Dictionary.Count % 5 == 0 && Dictionary.Count != 0)
                 {
-                   _eventHandler?.Invoke(items, EventArgs.Empty);
+                   _eventHandler?.Invoke(items,EventArgs.Empty);
                 }
 
                 streamReader.Close();
