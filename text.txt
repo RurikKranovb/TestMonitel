@@ -1,0 +1,304 @@
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Timers;
+using Timer = System.Timers.Timer;
+
+namespace TestMonitel
+{
+    class Program : IDisposable
+    {
+        public static ConcurrentDictionary<int, string> Dictionary;
+        private static int _w1;
+        private static int _w2;
+        private static Timer _timer;
+        private static int _keyStream1;
+        private static int _keyStream2;
+        private static Thread _thread;
+        private static Thread _mainStream;
+        private static Thread _readStream;
+        private static Thread _writeStream2;
+        private static Thread _writeStream1;
+        private static object _object;
+
+        static int x = 0;
+        static object locker = new object();
+
+
+        static void Main(string[] args)
+        {
+
+
+            Dictionary = new ConcurrentDictionary<int, string>();
+            //_n = 1;
+            _keyStream1 = 0;
+            _keyStream2 = 0;
+            _object = new object();
+
+            //_writeStream1 = new Thread(WriteStream1);
+            //_writeStream2 = new Thread(WriteStream2);
+            //_readStream = new Thread(ReadStream);
+
+            //_writeStream1.Start();
+            //_writeStream2.Start();
+            //_readStream.Start();
+
+
+           
+            _timer = new Timer {Interval = 1000};
+
+            //Console.WriteLine(t);
+
+            foreach (var item in Dictionary)
+            {
+                Console.WriteLine(item);
+            }
+
+
+            for (int i = 0; i < 5; i++)
+            {
+                Thread myThread = new Thread(Count);
+                myThread.Name = $"ѕоток {i.ToString()}";
+                myThread.Start();
+            }
+
+            Console.ReadLine();
+
+            Console.ReadLine();
+
+        }
+
+        public static void Count()
+        {
+            bool acquiredLock = false;
+            try
+            {
+                Monitor.Enter(Dictionary, ref acquiredLock);
+                x = 1;
+                for (int i = 1; i < 9; i++)
+                {
+
+                    //Dictionary.GetOrAdd(_w1, $"WS1 Ч {DateTime.Now}");
+
+                    foreach (var item in Dictionary)
+                    {
+                        Console.WriteLine(item);   
+                    }
+
+
+                    if (_w1 % 2 != 0) return;
+
+                    if (Dictionary.TryGetValue(_w1, out var result))
+                    {
+                        IncW1(ref _w1);
+                    }
+                    else
+                    {
+                        Dictionary.GetOrAdd(_w1, $"WS1 Ч {DateTime.Now}");
+
+                        _keyStream1 = Dictionary.Count - 1;
+                        IncW1(ref _w1);
+                    }
+
+                    foreach (var item in Dictionary)
+                    {
+                        Console.WriteLine(item);
+                    }
+
+                    Thread.Sleep(1000);
+                }
+            }
+            finally
+            {
+                if (acquiredLock) Monitor.Exit(Dictionary);
+            }
+        }
+
+
+        //public static void Count()
+            //{
+            //    try
+            //    {
+            //        while (_w1 <= 100)
+            //        {
+            //            Console.WriteLine("WriteStream1");
+
+
+            //            Dictionary.GetOrAdd(_w1, $"WS1 Ч {DateTime.Now}");
+
+            //            //if (_w1 % 2 != 0) return;
+
+            //            //if (Dictionary.TryGetValue(_w1, out var result))
+            //            //{
+            //            //    IncW1(ref _w1);
+            //            //}
+            //            //else
+            //            //{
+            //            //    Dictionary.GetOrAdd(_w1, $"WS1 Ч {DateTime.Now}");
+
+            //            //    _keyStream1 = Dictionary.Count - 1;
+            //            //    IncW1(ref _w1);
+            //            //}
+
+
+            //            Thread.Sleep(1000);
+            //        }
+            //    }
+            //    catch (Exception e)
+            //    {
+            //        Console.WriteLine($"WriteStream1 -- error: {e}");
+            //    }
+            //}
+
+
+
+
+            //private static void WriteStream1(object obj)
+            //{
+
+            //    try
+            //    {
+            //        while (_w1 <= 100)
+            //        {
+            //            Console.WriteLine("WriteStream1");
+
+            //            lock (_object)
+            //            {
+            //                if (_w1 % 2 != 0) return;
+
+            //                if (Dictionary.TryGetValue(_w1, out var result))
+            //                {
+            //                    IncW1(ref _w1);
+            //                }
+            //                else
+            //                {
+            //                    Dictionary.GetOrAdd(_w1, $"WS1 Ч {DateTime.Now}");
+
+            //                    _keyStream1 = Dictionary.Count - 1;
+            //                    IncW1(ref _w1);
+            //                }
+            //            }
+
+            //            Thread.Sleep(1000);
+            //        }
+            //    }
+            //    catch (Exception e)
+            //    {
+            //        Console.WriteLine($"WriteStream1 -- error: {e}");
+            //    }
+            //}
+
+            private static void IncW1(ref int w1)
+        {
+            w1++;
+        }
+
+
+        //private static void ReadStream(object obj)
+        //{
+        //    try
+        //    {
+        //        lock (_object)
+        //        {
+        //            while (_n <= 100)
+        //            {
+        //                if (Dictionary.Count % 5 == 0 && Dictionary.Count != 0)
+        //                {
+        //                    Task.Run(MainStream);
+        //                }
+        //            }
+        //        }
+
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        Console.WriteLine($"ReadStream -- error: {e}");
+        //    }
+
+        //}
+
+        //private static void MainStream()
+        //{
+        //    try
+        //    {
+        //        Console.WriteLine("MainStream");
+        //        lock (_object)
+        //        {
+        //            var item = _keyStream1 += _keyStream2;
+
+        //            var key = item + Dictionary.Count;
+
+        //            Dictionary.GetOrAdd(key, $"MS Ч {Dictionary.Count} + {item}");
+
+        //            foreach (var tem in Dictionary)
+        //            {
+        //                Console.WriteLine(tem);
+        //            }
+        //        }
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        Console.WriteLine($"MainStream -- error: {e}");
+        //    }
+
+        //}
+
+        //private static void WriteStream2(object obj)
+        //{
+
+        //    try
+        //    {
+        //        while (_n >= 100)
+        //        {
+
+        //            Console.WriteLine("WriteStream2");
+        //            lock (_object)
+        //            {
+        //                if (Dictionary.TryGetValue(_n, out var result))
+        //                {
+        //                    IncInt(ref _n);
+        //                }
+        //                else
+        //                {
+        //                    if (_n % 2 == 0) return;
+
+        //                    Dictionary.GetOrAdd(_n, $"WS2 Ч {DateTime.Now}");
+
+        //                    _keyStream2 = Dictionary.Count - 1;
+        //                    IncInt(ref _n);
+        //                }
+        //            }
+
+        //            Thread.Sleep(1000);
+        //        }
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        Console.WriteLine($"WriteStream2 -- error: {e}");
+        //    }
+        //}
+
+
+
+
+
+        private static void IncInt(ref int n)
+        {
+            n++;
+        }
+
+
+        public void Dispose()
+        {
+            _writeStream1.Abort();
+            _writeStream2.Abort();
+            _mainStream.Abort();
+            _readStream.Abort();
+        }
+    }
+}
