@@ -105,11 +105,11 @@ namespace TestMonitel
 
         private static void MainStream()
         {
-            var key = _keyStream1 += _keyStream2;
+            var item = _keyStream1 += _keyStream2;
 
-            key += Dictionary.Count;
+            var key = item + Dictionary.Count;
 
-            Dictionary.Add(key, $"MS — {Dictionary.Count} + {key}");
+            Dictionary.Add(key, $"MS — {Dictionary.Count} + {item}");
         }
 
         public void Dispose()
